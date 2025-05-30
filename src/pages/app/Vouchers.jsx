@@ -6,6 +6,7 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { LuLoaderCircle } from "react-icons/lu";
 import { RiDeleteBin6Line } from "react-icons/ri";
+import Swal from "sweetalert2";
 // import Filter from "../../../components/global/Filter";
 
 const Vouchers = () => {
@@ -20,7 +21,11 @@ const Vouchers = () => {
     try {
       const response = await instance.post("/admin/send");
 
-      toast.success(response?.message || "Coupons sent successfully.");
+      Swal.fire({
+        title: "Vouchers sent successfully!",
+        text: "Vouchers have been sent to the matched users.",
+        icon: "success",
+      });
       await getVouchers();
     } catch (error) {
       console.log(error);

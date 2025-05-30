@@ -9,7 +9,7 @@ import { LuLoaderCircle } from "react-icons/lu";
 
 const Vouchers = () => {
   const navigate = useNavigate();
-  const { data, loading } = useVouchers("admin/count");
+  const { data, loading } = useVouchers("admin/coupon");
   const [loadingSend, setLoadingSend] = useState(false);
 
   const handleSendVouchers = async () => {
@@ -71,13 +71,15 @@ const Vouchers = () => {
           <p className="text-[#8c8c8c]">No voucher</p>
         ) : (
           data?.images?.map((voucher, index) => {
-            console.log(voucher);
+            console.log(`${index} ${voucher.url}`);
             return (
               <div
                 key={index}
-                className="h-[400px] rounded-normal bg-[#cbcbcb] bg-center bg-contain bg-no-repeat"
-                style={{ backgroundImage: `url(${voucher.url})` }}
-              />
+                className="h-[400px] rounded-normal bg-[#cbcbcb] bg-center bg-contain bg-no-repeat flex justify-center items-center overflow-hidden"
+                // style={{ backgroundImage: `url(${voucher.url})` }}
+              >
+                <img src={voucher.url} alt="" />
+              </div>
             );
           })
         )}

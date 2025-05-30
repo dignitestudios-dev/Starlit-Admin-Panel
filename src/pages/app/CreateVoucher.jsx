@@ -51,7 +51,7 @@ const CreateVoucher = () => {
         formData.append("files", file);
       });
 
-      const response = await instance.post(`/admin/upload-coupon`, formData, {
+      const response = await instance.post(`/admin/coupon`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -59,6 +59,7 @@ const CreateVoucher = () => {
 
       console.log("Response voucher upload:", response);
       setImages([]);
+      navigate("/app/vouchers")
       toast.success("Vouchers uploaded successfully!");
     } catch (error) {
       console.log(error);

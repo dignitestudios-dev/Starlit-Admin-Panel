@@ -91,7 +91,12 @@ const Vouchers = () => {
             <div className="h-[400px] rounded-normal bg-[#e1e1e1] bg-center bg-contain bg-no-repeat animate-pulse" />
           </>
         ) : !data?.images?.length ? (
-          <p className="text-[#8c8c8c]">No voucher</p>
+          <div className="col-span-full h-[60vh] w-full flex justify-center items-center">
+            <p className="text-[#8c8c8c]">
+              No vouchers have been created yet. Start by uploading a new
+              voucher to share with matched users.
+            </p>
+          </div>
         ) : (
           data?.images?.map((voucher, index) => {
             console.log(`${index} ${voucher.url}`);

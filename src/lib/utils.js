@@ -50,6 +50,6 @@ export const processError = (error) => {
     ErrorToast(error?.response?.data?.error);
     return;
   } else {
-    ErrorToast("Something went wrong");
+    ErrorToast("Server Error");
   }
 };

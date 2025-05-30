@@ -5,12 +5,14 @@ import { useVouchers } from "../../hooks/api/Get";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { LuLoaderCircle } from "react-icons/lu";
+import { RiDeleteBin6Line } from "react-icons/ri";
 // import Filter from "../../../components/global/Filter";
 
 const Vouchers = () => {
   const navigate = useNavigate();
-  const { data, loading } = useVouchers("admin/coupon");
+  const { data, loading, getVouchers } = useVouchers("admin/coupon");
   const [loadingSend, setLoadingSend] = useState(false);
+  const [loadingRemove, setLoadingRemove] = useState(false);
 
   const handleSendVouchers = async () => {
     setLoadingSend(true);
@@ -19,15 +21,36 @@ const Vouchers = () => {
       const response = await instance.post("/admin/send");
 
       toast.success(response?.message || "Coupons sent successfully.");
+      await getVouchers();
     } catch (error) {
       console.log(error);
       toast.error(
-        error?.response?.data?.message ||
-          error?.message ||
-          "Something went wrong"
+        error?.response?.data?.error || error?.message || "Something went wrong"
       );
     } finally {
       setLoadingSend(false);
+    }
+  };
+
+  const handleRemoveVouchers = async (filename) => {
+    console.log("filename: ", filename);
+    if (!filename) return;
+    setLoadingRemove(true);
+
+    try {
+      const response = await instance.post("/admin/remove", {
+        filename,
+      });
+
+      toast.success(response?.message || "Coupon deleted successfully.");
+      await getVouchers();
+    } catch (error) {
+      console.log(error);
+      toast.error(
+        error?.response?.data?.error || error?.message || "Something went wrong"
+      );
+    } finally {
+      setLoadingRemove(false);
     }
   };
 
@@ -75,10 +98,17 @@ const Vouchers = () => {
             return (
               <div
                 key={index}
-                className="h-[400px] rounded-normal bg-[#cbcbcb] bg-center bg-contain bg-no-repeat flex justify-center items-center overflow-hidden"
+                className="relative group h-[400px] rounded-normal bg-[#cbcbcb] bg-center bg-contain bg-no-repeat flex justify-center items-center overflow-hidden"
                 // style={{ backgroundImage: `url(${voucher.url})` }}
               >
                 <img src={voucher.url} alt="" />
+                <div className="absolute w-full h-full flex justify-center items-center bg-[#0000005a] rounded-normal opacity-0 group-hover:opacity-100 transition-all duration-500">
+                  <RiDeleteBin6Line
+                    size={50}
+                    className="text-error cursor-pointer"
+                    onClick={() => handleRemoveVouchers(voucher.filename)}
+                  />
+                </div>
               </div>
             );
           })

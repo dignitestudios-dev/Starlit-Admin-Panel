@@ -85,7 +85,9 @@ const useVouchers = (url) => {
       setData(data?.result);
       setPagination(data?.pagination);
     } catch (error) {
-      processError(error);
+      processError(
+        error?.response?.data?.error || error?.message || "Something went wrong"
+      );
     } finally {
       setLoading(false);
     }
@@ -94,7 +96,7 @@ const useVouchers = (url) => {
     getVouchers();
   }, []);
 
-  return { loading, data, pagination };
+  return { loading, data, pagination, getVouchers };
 };
 
 const useReportedUsers = (url, activeTab) => {

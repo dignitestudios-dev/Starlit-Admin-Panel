@@ -4,6 +4,7 @@ import AuthButton from "../../components/global/AuthButton";
 import { useState, useRef } from "react";
 import toast from "react-hot-toast";
 import instance from "../../axios";
+import { RiDeleteBin6Line } from "react-icons/ri";
 
 const CreateVoucher = () => {
   const uploadLimit = 10;
@@ -115,13 +116,20 @@ const CreateVoucher = () => {
           <div className="grid grid-cols-5 md:grid-cols-4 gap-4">
             {images.map((image, index) => (
               <div
-                onDoubleClick={() => handleImageRemove(index)}
                 key={index}
-                className="h-[200px] rounded-normal bg-[#e0e0e0] bg-center bg-contain bg-no-repeat"
+                className="relative group h-[200px] rounded-normal bg-[#e0e0e0] bg-center bg-contain bg-no-repeat"
                 style={{
                   backgroundImage: `url(${URL.createObjectURL(image)})`,
                 }}
-              />
+              >
+                <div className="absolute w-full h-full flex justify-center items-center bg-[#0000005a] rounded-normal opacity-0 group-hover:opacity-100 transition-all duration-500">
+                  <RiDeleteBin6Line
+                    size={50}
+                    className="text-error cursor-pointer"
+                    onClick={() => handleImageRemove(index)}
+                  />
+                </div>
+              </div>
             ))}
           </div>
         )}

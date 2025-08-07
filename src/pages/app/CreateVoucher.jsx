@@ -5,61 +5,83 @@ import { useState, useRef } from "react";
 import toast from "react-hot-toast";
 import instance from "../../axios";
 import { RiDeleteBin6Line } from "react-icons/ri";
+import Papa from "papaparse"; // CSV parsing library
 
 const CreateVoucher = () => {
-  const uploadLimit = 10;
+  const uploadLimit = 1; // Only one CSV file
   const navigate = useNavigate();
-  const [images, setImages] = useState([]);
-  const imageInputRef = useRef(null); // ✅ Ref for the file input
+  const [csvFile, setCsvFile] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [parsedData, setParsedData] = useState([]);
+  const csvInputRef = useRef(null); // ✅ Ref for the CSV file input
 
-  const handleImageChange = (e) => {
-    const files = Array.from(e.target.files);
-    setImages((prev) => [...prev, ...files]);
-  };
-
-  const handleImageRemove = (indexToRemove) => {
-    setImages((prev) => prev.filter((_, index) => index !== indexToRemove));
-  };
-
-  const handleRemoveAll = () => {
-    setImages([]);
-    if (imageInputRef.current) {
-      imageInputRef.current.value = null; // ✅ Reset input value
+  const handleCsvChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setCsvFile(file);
+      parseCsv(file);
     }
+  };
+
+
+  const handlereload = () =>{
+    window.location.reload();
+  }
+
+  const parseCsv = (file) => {
+    Papa.parse(file, {
+      complete: (result) => {
+        console.log(result); // Log parsed result to see the output structure
+
+        const records = result.data.map((row) => {
+          // Ensure that each row has the correct structure
+          return {
+            type: row.type, // Accessing columns by header names directly
+            code: row.code,
+            amount: row.amount ? row.amount : null, // Handle null or undefined amounts
+          };
+        });
+
+        setParsedData(records);
+      },
+      header: true, // This tells Papa to treat the first row as header
+      skipEmptyLines: true, // Skips empty lines in the CSV
+    });
+  };
+
+  const handleRemoveFile = () => {
+    setCsvFile(null);        // Clear the selected file
+    setParsedData([]);       // Clear the preview data
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (loading) return;
     setLoading(true);
-    console.log("Submitting images:", images);
+    console.log("Submitting CSV data:", parsedData);
 
     try {
-      if (!images.length) {
-        toast.error("Please select at least one voucher to upload.");
+      if (!parsedData.length) {
+        toast.error("Please upload a valid CSV file with voucher data.");
         return;
       }
 
-      if (images.length > uploadLimit) {
-        toast.error("Maximum 10 uploads allowed at once.");
-        return;
-      }
+      // if (parsedData.length > uploadLimit) {
+      //   toast.error("Maximum 1 CSV file upload allowed.");
+      //   return;
+      // }
 
-      const formData = new FormData();
-      images.forEach((file) => {
-        formData.append("files", file);
-      });
+      const payload = { records: parsedData };
 
-      const response = await instance.post(`/admin/coupon`, formData, {
+      const response = await instance.post("/admin/coupon", payload, {
         headers: {
-          "Content-Type": "multipart/form-data",
+          "Content-Type": "application/json",
         },
       });
 
       console.log("Response voucher upload:", response);
-      setImages([]);
-      navigate("/app/vouchers")
+      setParsedData([]);
+      // navigate("/app/vouchers");
       toast.success("Vouchers uploaded successfully!");
     } catch (error) {
       console.log(error);
@@ -79,19 +101,18 @@ const CreateVoucher = () => {
         <button className="text-[34px]" onClick={() => navigate(-1)}>
           <IoIosArrowRoundBack />
         </button>
-        <p className="text-heading text-base font-semibold">Upload Images</p>
+        <p className="text-heading text-base font-semibold">Upload CSV</p>
       </div>
 
       <form className="" onSubmit={handleSubmit}>
-        {/* Image Upload */}
+        {/* CSV Upload */}
         <div className="rounded-normal bg-[#ffffff] p-4 mb-4 flex items-center gap-5">
           {/* Hidden input */}
           <input
-            ref={imageInputRef}
+            ref={csvInputRef}
             type="file"
-            multiple
-            accept="image/*"
-            onChange={handleImageChange}
+            accept=".csv"
+            onChange={handleCsvChange}
             className="hidden"
             disabled={loading}
           />
@@ -99,39 +120,41 @@ const CreateVoucher = () => {
           {/* Custom button */}
           <button
             type="button"
-            onClick={() => imageInputRef.current?.click()}
+            onClick={() => csvInputRef.current?.click()}
             className="bg-primary text-[#ffffff] h-[50px] w-fit rounded-[9px] px-[22px]"
           >
-            Select Images
+            Select CSV
           </button>
 
           <p className="text-[#8c8c8c]">
-            {images.length
-              ? "Note: Double click on any file to remove"
-              : `Upload vouchers (Maximum ${uploadLimit} uploads allowed at once)`}
+            {csvFile
+              ? "Note: Double-click to remove the file"
+              : "Upload a CSV file (Maximum 1 file allowed)"}
           </p>
         </div>
 
-        {/* Preview Images */}
-        {images.length > 0 && (
-          <div className="grid grid-cols-5 md:grid-cols-4 gap-4">
-            {images.map((image, index) => (
-              <div
-                key={index}
-                className="relative group h-[200px] rounded-normal bg-[#e0e0e0] bg-center bg-contain bg-no-repeat"
-                style={{
-                  backgroundImage: `url(${URL.createObjectURL(image)})`,
-                }}
-              >
-                <div className="absolute w-full h-full flex justify-center items-center bg-[#0000005a] rounded-normal opacity-0 group-hover:opacity-100 transition-all duration-500">
-                  <RiDeleteBin6Line
-                    size={50}
-                    className="text-error cursor-pointer"
-                    onClick={() => handleImageRemove(index)}
-                  />
-                </div>
-              </div>
-            ))}
+        {/* Preview CSV Data */}
+        {parsedData.length > 0 && (
+          <div className="bg-[#f4f4f4] p-4 rounded-lg">
+            <h3 className="font-semibold text-lg">Preview Data</h3>
+            <table className="w-full mt-2">
+              <thead>
+                <tr>
+                  <th className="text-left">Type</th>
+                  <th className="text-left">Code</th>
+                  <th className="text-left">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {parsedData.map((record, index) => (
+                  <tr key={index}>
+                    <td>{record.type}</td>
+                    <td>{record.code}</td>
+                    <td>{record.amount || "N/A"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
 
@@ -142,10 +165,17 @@ const CreateVoucher = () => {
           </div>
           <button
             type="button"
-            onClick={handleRemoveAll}
+            onClick={handleRemoveFile}  // Call the new function to remove the file and preview data
             className="bg-[#E9E9E9] w-[150px] h-[50px] rounded-[9px] text-[#000000] text-[14px] font-[700]"
           >
-            Remove All
+            Remove File
+          </button>
+          <button
+            type="button"
+            onClick={handlereload}  // Call the new function to remove the file and preview data
+            className="bg-[#E9E9E9] w-[150px] h-[50px] rounded-[9px] text-[#000000] text-[14px] font-[700]"
+          >
+ Reload
           </button>
         </div>
       </form>
